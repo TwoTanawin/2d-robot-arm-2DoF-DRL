@@ -16,7 +16,7 @@ class CustomEnv(gym.Env):
         # Constants
         self.WIDTH, self.HEIGHT = 800, 600
         self.FPS = 60
-        self.TIMER_LIMIT = 3  # Timer limit in seconds
+        self.TIMER_LIMIT = 10  # Timer limit in seconds
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -26,7 +26,8 @@ class CustomEnv(gym.Env):
         self.BLUE = (0, 0, 255)
 
         # Define action and observation space
-        self.action_space = spaces.Discrete(4)  # 4 discrete actions
+        # self.action_space = spaces.Discrete(4)  # 4 discrete actions
+        self.action_space = spaces.Discrete(5)  # 0: Do nothing, 1: Pick, 2: Place, 3: Rotate arm 1, 4: Rotate arm 2
 
         self.observation_space = spaces.Box(low=0, high=255, shape=(self.HEIGHT, self.WIDTH, 3), dtype=np.uint8)
 
@@ -130,6 +131,8 @@ class CustomEnv(gym.Env):
     def step(self, action):
         angle1_change = 0
         angle2_change = 0
+
+        # Define action mappings
         if action == 0:
             angle1_change = -1
         elif action == 1:
@@ -138,13 +141,65 @@ class CustomEnv(gym.Env):
             angle2_change = 1
         elif action == 3:
             angle2_change = -1
+        elif action == 4:  # Pick action
+            if self.robot_arm.pick(self.apple_pos, self.object_radius):
+                self.score += 10
+                self.apple_pos = self.generate_apple_position()
+                self.timer_start = None
+            else:
+                self.score -= 10
 
+        elif action == 5:  # Place action
+            if self.robot_arm.place(self.box_pos, self.object_radius + 10):
+                self.score += 10
+                self.apple_pos = self.generate_apple_position()
+                self.timer_start = None
+            else:
+                self.score -= 10
+
+        # Update robot arm angles based on action
         self.update(angle1_change, angle2_change)
-        self.handle_events()
+
+        # # Automatically perform pick and place actions
+        # if self.score >= 10:  # Perform pick action if score is at least 10
+        #     if self.robot_arm.pick(self.apple_pos, self.object_radius):
+        #         self.score += 10
+        #         self.apple_pos = self.generate_apple_position()
+        #         self.timer_start = None  # Reset timer
+        #     else:
+        #         self.score -= 10
+
+        # if self.score >= 20:  # Perform place action if score is at least 20
+        #     if self.robot_arm.place(self.box_pos, self.object_radius + 10):
+        #         self.score += 10
+        #         self.apple_pos = self.generate_apple_position()
+        #         self.timer_start = None  # Reset timer
+        #     else:
+        #         self.score -= 10
+    # Randomly perform pick and place actions
+        # if random.random() < 0.5:  # 50% chance to perform a random action
+        #     if random.random() < 0.5:  # 50% chance to pick or place
+        #         if self.robot_arm.pick(self.apple_pos, self.object_radius):
+        #             self.score += 10
+        #             self.apple_pos = self.generate_apple_position()
+        #             self.timer_start = None  # Reset timer
+        #     else:
+        #         if self.robot_arm.place(self.box_pos, self.object_radius + 10):
+        #             self.score += 10
+        #             self.apple_pos = self.generate_apple_position()
+        #             self.timer_start = None  # Reset timer
+
+        # Handle events (none needed for automatic actions)
         self.check_game_over()
+
+        # Draw the environment
         self.draw()
+
+        # Clock tick
         self.clock.tick(self.FPS)
-        if self.timer_start is None:  # Start timer if not already started
+
+        # Start timer if not already started
+        if self.timer_start is None:
             self.timer_start = time.time()
 
         # Return all five values
@@ -220,15 +275,15 @@ class RobotArm:
         return False
 
 # For testing the environment
-if __name__ == "__main__":
-    pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    env = CustomEnv(screen)
-    obs, info = env.reset()
-    done = False
-    while not done:
-        action = env.action_space.sample()
-        obs, reward, done, info, _ = env.step(action)
-        env.render()
-    env.close()
+# if __name__ == "__main__":
+#     pygame.init()
+#     screen = pygame.display.set_mode((800, 600))
+#     env = CustomEnv(screen)
+#     obs, info = env.reset()
+#     done = False
+#     while not done:
+#         action = env.action_space.sample()
+#         obs, reward, done, info, _ = env.step(action)
+#         env.render()
+#     env.close()
 
