@@ -33,10 +33,5 @@ for i in range(1, 100):
     # Render the environment in rgb_array mode after training
     obs = env.render(mode="rgb_array")
 
-    # Visualize the RGB observation (optional)
-    # plt.imshow(obs)
-    # plt.axis('off')
-    # plt.show()
-
 # Close the environment
 env.close()

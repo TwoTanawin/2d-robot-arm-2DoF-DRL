@@ -16,7 +16,7 @@ class CustomEnv(gym.Env):
         # Constants
         self.WIDTH, self.HEIGHT = 800, 600
         self.FPS = 60
-        self.TIMER_LIMIT = 10  # Timer limit in seconds
+        self.TIMER_LIMIT = 3  # Timer limit in seconds
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -91,7 +91,7 @@ class CustomEnv(gym.Env):
         if self.score >= 100 or self.score <= -30:
             self.running = False
 
-    def reset(self):
+    def reset(self, seed=None):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.robot_arm = RobotArm(self.WIDTH // 2, self.HEIGHT // 2, 100, self.screen, self.BLACK, self.RED, self.GREEN, self.BLUE)  # Pass colors to RobotArm constructor
@@ -115,14 +115,15 @@ class CustomEnv(gym.Env):
         # Check if the dimensions match before blitting the array
         if surface.get_size() == self.screen.get_size():
             pygame.surfarray.blit_array(surface, observation)
-            return observation
+            return observation.transpose(1, 0, 2)  # Transpose to match the expected shape
         else:
             # Create a resized surface to match self.screen dimensions
             resized_surface = pygame.transform.scale(surface, self.screen.get_size())
             
             # Convert the resized surface back to a NumPy array
             resized_observation = pygame.surfarray.array3d(resized_surface)
-            return resized_observation
+            return resized_observation.transpose(1, 0, 2)  # Transpose to match the expected shape
+
 
 
 
@@ -146,13 +147,21 @@ class CustomEnv(gym.Env):
         if self.timer_start is None:  # Start timer if not already started
             self.timer_start = time.time()
 
-        return self._get_observation(), self.score, not self.running, {}
+        # Return all five values
+        return self._get_observation(), self.score, not self.running, False, {}
+
 
     def render(self, mode="human"):
         if mode == "human":
             pygame.display.flip()
+        elif mode == "rgb_array":
+            self.draw()
+            observation = self._get_observation()
+            return observation
         else:
-            raise NotImplementedError("Only human rendering mode is supported.")
+            raise NotImplementedError("Only human and rgb_array rendering modes are supported.")
+
+
 
     def close(self):
         pygame.quit()
@@ -215,11 +224,11 @@ if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     env = CustomEnv(screen)
-    obs = env.reset()
+    obs, info = env.reset()
     done = False
     while not done:
         action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, info, _ = env.step(action)
         env.render()
     env.close()
 
