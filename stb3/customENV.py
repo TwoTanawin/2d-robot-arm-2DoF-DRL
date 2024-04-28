@@ -16,7 +16,7 @@ class CustomEnv(gym.Env):
         # Constants
         self.WIDTH, self.HEIGHT = 800, 600
         self.FPS = 60
-        self.TIMER_LIMIT = 10  # Timer limit in seconds
+        self.TIMER_LIMIT = 5  # Timer limit in seconds
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -89,14 +89,15 @@ class CustomEnv(gym.Env):
         pygame.display.flip()
 
     def check_game_over(self):
-        if self.score >= 100 or self.score <= -30:
+        if self.score >= 10 or self.score <= -100:
             self.running = False
 
     def reset(self, seed=None):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.robot_arm = RobotArm(self.WIDTH // 2, self.HEIGHT // 2, 100, self.screen, self.BLACK, self.RED, self.GREEN, self.BLUE)  # Pass colors to RobotArm constructor
-        self.apple_pos = self.generate_apple_position()
+        # self.apple_pos = self.generate_apple_position()
+        self.apple_pos = (250, 300)
         self.box_pos = (3 * self.WIDTH // 4, self.HEIGHT // 2)
         self.score = 0
         self.running = True
@@ -134,16 +135,16 @@ class CustomEnv(gym.Env):
 
         # Define action mappings
         if action == 0:
-            angle1_change = -1
+            angle1_change = -2
         elif action == 1:
-            angle1_change = 1
+            angle1_change = 2
         elif action == 2:
-            angle2_change = 1
+            angle2_change = 2
         elif action == 3:
-            angle2_change = -1
+            angle2_change = -2
         elif action == 4:  # Pick action
             if self.robot_arm.pick(self.apple_pos, self.object_radius):
-                self.score += 10
+                self.score += 100
                 self.apple_pos = self.generate_apple_position()
                 self.timer_start = None
             else:
@@ -151,7 +152,7 @@ class CustomEnv(gym.Env):
 
         elif action == 5:  # Place action
             if self.robot_arm.place(self.box_pos, self.object_radius + 10):
-                self.score += 10
+                self.score += 100
                 self.apple_pos = self.generate_apple_position()
                 self.timer_start = None
             else:
