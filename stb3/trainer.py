@@ -23,9 +23,9 @@ env = Monitor(env, logdir)  # Wrap with Monitor for logging
 # env.reset()
 
 # Initialize and train the PPO model
-model = PPO("CnnPolicy", env, verbose=1, tensorboard_log=logdir)
+model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=logdir, batch_size=4)
 
-TIMESTEPS = 80_000
+TIMESTEPS = 100
 for i in range(1, 100):
     model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False, tb_log_name="PPO")
     model.save(f"{model_dir}/{TIMESTEPS*i}")

@@ -1,27 +1,16 @@
-import gymnasium as gym
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv
 from customENV import CustomEnv
+import pygame
 
-# Create a single environment
-env = CustomEnv()
+screen = pygame.display.set_mode((800, 600))
 
-# Wrap the environment in a vectorized environment
-vec_env = DummyVecEnv([lambda: env])
+env = CustomEnv(screen)
+episodes = 50
 
-# Create the PPO agent
-model = PPO("MlpPolicy", vec_env, verbose=1)
-
-# Train the agent
-model.learn(total_timesteps=10000)
-
-# Test the trained agent
-obs = vec_env.reset()
-for _ in range(1000):
-    action, _ = model.predict(obs)
-    obs, reward, done, _ = vec_env.step(action)
-    if done:
-        obs = vec_env.reset()
-
-# Close the environment
-env.close()
+for episode in range(episodes):
+	done = False
+	obs, info = env.reset()
+	while True:#not done:
+		random_action = env.action_space.sample()
+		print("action",random_action)
+		obs, reward, done, info, _ = env.step(random_action)
+		print('reward',reward)
