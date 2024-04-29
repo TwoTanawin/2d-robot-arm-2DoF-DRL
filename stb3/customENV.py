@@ -88,9 +88,14 @@ class CustomEnv(gym.Env):
                 self.screen.blit(timer_text, (self.WIDTH - 160, 10))
         pygame.display.flip()
 
+    # def check_game_over(self):
+    #     if self.score >= 10 or self.score <= -10:
+    #         self.running = False
     def check_game_over(self):
         if self.score >= 10 or self.score <= -100:
+            print("Game Over condition met.")
             self.running = False
+
 
     def reset(self, seed=None):
         pygame.init()
@@ -129,69 +134,91 @@ class CustomEnv(gym.Env):
 
 
 
+    # def step(self, action):
+    #     angle1_change = 0
+    #     angle2_change = 0
+
+    #     # Define action mappings
+    #     if action == 0:
+    #         angle1_change = -2
+    #     elif action == 1:
+    #         angle1_change = 2
+    #     elif action == 2:
+    #         angle2_change = 2
+    #     elif action == 3:
+    #         angle2_change = -2
+    #     elif action == 4:  # Pick action
+    #         if self.robot_arm.pick(self.apple_pos, self.object_radius):
+    #             self.score += 100
+    #             self.apple_pos = self.generate_apple_position()
+    #             self.timer_start = None
+    #         else:
+    #             self.score -= 10
+
+    #     elif action == 5:  # Place action
+    #         if self.robot_arm.place(self.box_pos, self.object_radius + 10):
+    #             self.score += 100
+    #             self.apple_pos = self.generate_apple_position()
+    #             self.timer_start = None
+    #         else:
+    #             self.score -= 10
+
+    #     # Update robot arm angles based on action
+    #     self.update(angle1_change, angle2_change)
+
+
+    #     # Handle events (none needed for automatic actions)
+    #     self.check_game_over()
+
+    #     # Draw the environment
+    #     self.draw()
+
+    #     # Clock tick
+    #     self.clock.tick(self.FPS)
+
+    #     # Start timer if not already started
+    #     if self.timer_start is None:
+    #         self.timer_start = time.time()
+
+    #     # Return all five values
+    #     return self._get_observation(), self.score, not self.running, False, {}
+
     def step(self, action):
         angle1_change = 0
         angle2_change = 0
 
         # Define action mappings
         if action == 0:
-            angle1_change = -2
+            angle1_change = -5
         elif action == 1:
-            angle1_change = 2
+            angle1_change = 5
         elif action == 2:
-            angle2_change = 2
+            angle2_change = 5
         elif action == 3:
-            angle2_change = -2
-        elif action == 4:  # Pick action
-            if self.robot_arm.pick(self.apple_pos, self.object_radius):
-                self.score += 100
-                self.apple_pos = self.generate_apple_position()
-                self.timer_start = None
-            else:
-                self.score -= 10
-
-        elif action == 5:  # Place action
-            if self.robot_arm.place(self.box_pos, self.object_radius + 10):
-                self.score += 100
-                self.apple_pos = self.generate_apple_position()
-                self.timer_start = None
-            else:
-                self.score -= 10
+            angle2_change = -5
 
         # Update robot arm angles based on action
         self.update(angle1_change, angle2_change)
 
-        # # Automatically perform pick and place actions
-        # if self.score >= 10:  # Perform pick action if score is at least 10
-        #     if self.robot_arm.pick(self.apple_pos, self.object_radius):
-        #         self.score += 10
-        #         self.apple_pos = self.generate_apple_position()
-        #         self.timer_start = None  # Reset timer
-        #     else:
-        #         self.score -= 10
-
-        # if self.score >= 20:  # Perform place action if score is at least 20
-        #     if self.robot_arm.place(self.box_pos, self.object_radius + 10):
-        #         self.score += 10
-        #         self.apple_pos = self.generate_apple_position()
-        #         self.timer_start = None  # Reset timer
-        #     else:
-        #         self.score -= 10
-    # Randomly perform pick and place actions
-        # if random.random() < 0.5:  # 50% chance to perform a random action
-        #     if random.random() < 0.5:  # 50% chance to pick or place
-        #         if self.robot_arm.pick(self.apple_pos, self.object_radius):
-        #             self.score += 10
-        #             self.apple_pos = self.generate_apple_position()
-        #             self.timer_start = None  # Reset timer
-        #     else:
-        #         if self.robot_arm.place(self.box_pos, self.object_radius + 10):
-        #             self.score += 10
-        #             self.apple_pos = self.generate_apple_position()
-        #             self.timer_start = None  # Reset timer
-
-        # Handle events (none needed for automatic actions)
+        # Handle events and check game over state
         self.check_game_over()
+
+        # Check if gripper passes over the target (apple)
+        end_x2 = self.robot_arm.base_x + self.robot_arm.arm_length * math.cos(math.radians(self.robot_arm.angle1)) + \
+                self.robot_arm.arm_length * math.cos(math.radians(self.robot_arm.angle2))
+        end_y2 = self.robot_arm.base_y - self.robot_arm.arm_length * math.sin(math.radians(self.robot_arm.angle1)) - \
+                self.robot_arm.arm_length * math.sin(math.radians(self.robot_arm.angle2))
+        distance_to_apple = math.sqrt((self.apple_pos[0] - end_x2) ** 2 + (self.apple_pos[1] - end_y2) ** 2)
+        
+        # Reward logic
+        if distance_to_apple < self.object_radius:  # Gripper passes over the apple
+            self.score += 100  # Reward for passing over the target
+            print(f"Score after passing over apple: {self.score}") 
+            self.apple_pos = self.generate_apple_position()  # Generate a new apple position
+            self.timer_start = None  # Reset timer
+        
+
+
 
         # Draw the environment
         self.draw()
@@ -203,8 +230,11 @@ class CustomEnv(gym.Env):
         if self.timer_start is None:
             self.timer_start = time.time()
 
-        # Return all five values
+        # Return observation, reward, done, and additional info
         return self._get_observation(), self.score, not self.running, False, {}
+
+
+
 
 
     def render(self, mode="human"):
