@@ -271,12 +271,36 @@ class CustomEnv(gym.Env):
             #     self.score = -20
             else:
                 self.score = -20
-        elif self.distance_to_apple <= 5 or self.distance_to_box <= 5:
+        # Robot state [0, 0]
+        elif self.distance_to_apple <= 5 and self.state == [0, 0]:
             self.score = 30
-        elif (self.distance_to_apple > 5 and self.distance_to_apple <= 10) or (self.distance_to_box > 5 and self.distance_to_box <= 10):
+        elif (self.distance_to_apple > 5 and self.distance_to_apple <= 10) and self.state == [0, 0]:
             self.score = 20
-        elif (self.distance_to_apple > 10 and self.distance_to_apple <= 15) or (self.distance_to_box > 10 and self.distance_to_box <= 15):
-            self.score =10
+        elif (self.distance_to_apple > 10 and self.distance_to_apple <= 15) and self.state == [0, 0]:
+            self.score = 10
+
+        elif self.distance_to_box <= 0 and self.state == [0, 0]:
+            self.score = -50
+        elif (self.distance_to_box > 5 and self.distance_to_box <= 10) and self.state == [0, 0]:
+            self.score = -40
+        elif (self.distance_to_box > 10 and self.distance_to_box <= 15) and self.state == [0, 0]:
+            self.score = -30
+        
+        # Robot state [1,0]
+        elif self.distance_to_apple <= 5 and self.state == [1, 0]:
+            self.score = -50
+        elif (self.distance_to_apple > 5 and self.distance_to_apple <= 10) and self.state == [1, 0]:
+            self.score = -40
+        elif (self.distance_to_apple > 10 and self.distance_to_apple <= 15) and self.state == [1, 0]:
+            self.score = -30
+        
+        elif self.distance_to_box <= 0 and self.state == [1, 0]:
+            self.score = 30
+        elif (self.distance_to_box > 5 and self.distance_to_box <= 10) and self.state == [1, 0]:
+            self.score = 20
+        elif (self.distance_to_box > 10 and self.distance_to_box <= 15) and self.state == [1, 0]:
+            self.score = 10
+
         else:
             self.score = (-1 * self.distance_to_apple)
             self.score = (-1 * self.distance_to_box)
