@@ -89,22 +89,30 @@ class CustomEnv(gym.Env):
         self.screen.blit(angle_text, (10, 40))
 
         holding_text = font.render(f"Holding: {'Yes' if self.robot_arm.holding else 'No'}", True, self.BLACK)
-        self.screen.blit(holding_text, (10, 70))
+        self.screen.blit(holding_text, (10, 130))
 
         robot_state_text = font.render(f"Robot State: {self.state}", True, self.BLACK)
-        self.screen.blit(robot_state_text, (10, 130))
+        self.screen.blit(robot_state_text, (10, 160))
 
         if self.state == [1, 1]:
             game_state_text = font.render(f"Game State: W", True, self.RED)
-            self.screen.blit(game_state_text, (self.WIDTH - 180, 40))
+            self.screen.blit(game_state_text, (self.WIDTH - 180, 70))
         else:
             game_state_text = font.render(f"Game State: R", True, self.RED)
-            self.screen.blit(game_state_text, (self.WIDTH -180, 40))
+            self.screen.blit(game_state_text, (self.WIDTH -180, 70))
+
+        timmer_state_text = font.render(f"Timmer State: {self.TIMER_STATE}", True, self.RED)
+        self.screen.blit(timmer_state_text, (self.WIDTH -190, 40))
 
         # Display distance to apple
         if hasattr(self, 'distance_to_apple'):
-            distance_text = font.render(f"Distance: {self.distance_to_apple:.2f}", True, self.RED)
-            self.screen.blit(distance_text, (10, 100))  # Position below the score
+            distance_text = font.render(f"Distance Apple: {self.distance_to_apple:.2f}", True, self.RED)
+            self.screen.blit(distance_text, (10, 70))  # Position below the score
+        # Display distance to apple
+
+        if hasattr(self, 'distance_to_box'):
+            distance_text_box = font.render(f"Distance Box: {self.distance_to_box:.2f}", True, self.RED)
+            self.screen.blit(distance_text_box, (10, 100))  # Position below the score
 
         if self.timer_start is not None:
             elapsed_time = time.time() - self.timer_start
@@ -131,10 +139,13 @@ class CustomEnv(gym.Env):
         if self.score >= 10 or self.score <= -1000:
             print("Game Over condition met.")
             self.running = False
+        if self.TIMER_STATE >= 4:
+            self.running = False
         if self.state == [1, 1]:
             print("Both actions completed")
             self.running = False  # Or any other action you'd like to take
-            self.reset() 
+            # self.reset() 
+        
 
 
     def reset(self, seed=None):
