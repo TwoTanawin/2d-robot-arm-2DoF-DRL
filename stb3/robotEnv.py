@@ -16,7 +16,7 @@ class CustomEnv(gym.Env):
         # Constants
         self.WIDTH, self.HEIGHT = 800, 600
         self.FPS = 60
-        self.TIMER_LIMIT = 5  # Timer limit in seconds
+        self.TIMER_LIMIT = 60  # Timer limit in seconds
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -92,7 +92,14 @@ class CustomEnv(gym.Env):
 
         robot_state_text = font.render(f"Robot State: {self.state}", True, self.BLACK)
         self.screen.blit(robot_state_text, (10, 130))
-        
+
+        if self.state == [1, 1]:
+            game_state_text = font.render(f"Game State: W", True, self.RED)
+            self.screen.blit(game_state_text, (self.WIDTH - 180, 40))
+        else:
+            game_state_text = font.render(f"Game State: R", True, self.RED)
+            self.screen.blit(game_state_text, (self.WIDTH -180, 40))
+
         # Display distance to apple
         if hasattr(self, 'distance_to_apple'):
             distance_text = font.render(f"Distance: {self.distance_to_apple:.2f}", True, self.RED)
@@ -101,8 +108,9 @@ class CustomEnv(gym.Env):
         if self.timer_start is not None:
             elapsed_time = time.time() - self.timer_start
             if elapsed_time >= self.TIMER_LIMIT:
-                self.score -= 5
+                self.score -= 1000
                 self.timer_start = None
+                self.state = [0, 0]
             else:
                 timer_text = font.render(f"Time left: {self.TIMER_LIMIT - int(elapsed_time)}s", True, self.RED)
                 self.screen.blit(timer_text, (self.WIDTH - 160, 10))
@@ -279,14 +287,19 @@ class CustomEnv(gym.Env):
         elif (self.distance_to_apple > 10 and self.distance_to_apple <= 15) and self.state == [0, 0]:
             self.score = 10
 
+        
         elif self.distance_to_box <= 0 and self.state == [0, 0]:
             self.score = -50
         elif (self.distance_to_box > 5 and self.distance_to_box <= 10) and self.state == [0, 0]:
             self.score = -40
         elif (self.distance_to_box > 10 and self.distance_to_box <= 15) and self.state == [0, 0]:
             self.score = -30
-        
+        elif (self.distance_to_box < self.object_radius) and self.state == [0, 0]:
+            self.score = -100
+
         # Robot state [1,0]
+        elif (self.distance_to_apple < self.object_radius) and self.state == [1, 0]:
+            self.score = -100
         elif self.distance_to_apple <= 5 and self.state == [1, 0]:
             self.score = -50
         elif (self.distance_to_apple > 5 and self.distance_to_apple <= 10) and self.state == [1, 0]:
