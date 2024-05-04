@@ -16,7 +16,8 @@ class CustomEnv(gym.Env):
         # Constants
         self.WIDTH, self.HEIGHT = 800, 600
         self.FPS = 60
-        self.TIMER_LIMIT = 60  # Timer limit in seconds
+        self.TIMER_LIMIT = 15  # Timer limit in seconds
+        self.TIMER_STATE = 0
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -108,9 +109,13 @@ class CustomEnv(gym.Env):
         if self.timer_start is not None:
             elapsed_time = time.time() - self.timer_start
             if elapsed_time >= self.TIMER_LIMIT:
-                self.score -= 1000
+                self.score -= 500
                 self.timer_start = None
-                self.state = [0, 0]
+                self.TIMER_STATE += 1
+                if self.TIMER_STATE > 4:
+                    self.score -= 2000
+                    self.state = [0, 0]
+                    self.robot_arm.holding = None
             else:
                 timer_text = font.render(f"Time left: {self.TIMER_LIMIT - int(elapsed_time)}s", True, self.RED)
                 self.screen.blit(timer_text, (self.WIDTH - 160, 10))
@@ -279,6 +284,7 @@ class CustomEnv(gym.Env):
             #     self.score = -20
             else:
                 self.score = -20
+                
         # Robot state [0, 0]
         elif self.distance_to_apple <= 5 and self.state == [0, 0]:
             self.score = 30
@@ -328,6 +334,7 @@ class CustomEnv(gym.Env):
         # Start timer if not already started
         if self.timer_start is None:
             self.timer_start = time.time()
+
 
         # Return observation, reward, done, and additional info
         return self._get_observation(), self.score, not self.running, False, {}
