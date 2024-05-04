@@ -136,7 +136,7 @@ class CustomEnv(gym.Env):
     #     if self.score >= 10 or self.score <= -10:
     #         self.running = False
     def check_game_over(self):
-        if self.score >= 10 or self.score <= -1000:
+        if self.score >= 10_000 or self.score <= -1000:
             print("Game Over condition met.")
             self.running = False
         if self.TIMER_STATE >= 4:
@@ -269,14 +269,14 @@ class CustomEnv(gym.Env):
         if self.distance_to_apple < self.object_radius:  # Gripper passes over the apple
             if self.state == [0,0]:
                 if self.robot_arm.pick(self.apple_pos, self.object_radius):
-                    self.score += 100  # Reward for passing over the target
+                    self.score += 1000  # Reward for passing over the target
                     print(f"Score after passing over apple: {self.score}") 
                     self.state[0] = 1  # Indicating the apple has been picked
                     self.state[1] = 0  # Indicating the apple has been placed
                     self.apple_pos = self.generate_apple_position()  # Generate a new apple position
                 # self.timer_start = None  # Reset timer
             else:
-                self.score = -10
+                self.score = -300
 
         elif self.distance_to_box < self.object_radius:
             if self.state == [1,0]:
@@ -290,7 +290,7 @@ class CustomEnv(gym.Env):
             # if self.state == [0,0]:
             #     self.score = -20
             else:
-                self.score = -20
+                self.score = -300
 
         # Robot state [0, 0]
         elif self.distance_to_apple <= 5 and self.state == [0, 0]:
@@ -331,10 +331,14 @@ class CustomEnv(gym.Env):
         #     self.score = (-1 * self.distance_to_apple)*10
         #     self.score = (-1 * self.distance_to_box)
 
-        else :
+        elif self.state == [0, 0] :
             self.score = (-1 * self.distance_to_apple)
-            self.score = (-1 * self.distance_to_box)
+            self.score = (-1 * self.distance_to_box)*1.5
     
+        elif self.state == [1, 0] :
+            self.score = (-1 * self.distance_to_apple)*1.5
+            self.score = (-1 * self.distance_to_box)
+
         # Update robot arm angles based on action
         self.update(angle1_change, angle2_change)
 
