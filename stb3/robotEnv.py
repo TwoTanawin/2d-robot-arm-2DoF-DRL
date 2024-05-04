@@ -116,6 +116,7 @@ class CustomEnv(gym.Env):
                     self.score -= 2000
                     self.state = [0, 0]
                     self.robot_arm.holding = None
+                    self.TIMER_STATE = 0
             else:
                 timer_text = font.render(f"Time left: {self.TIMER_LIMIT - int(elapsed_time)}s", True, self.RED)
                 self.screen.blit(timer_text, (self.WIDTH - 160, 10))
@@ -133,6 +134,7 @@ class CustomEnv(gym.Env):
         if self.state == [1, 1]:
             print("Both actions completed")
             self.running = False  # Or any other action you'd like to take
+            self.reset() 
 
 
     def reset(self, seed=None):
@@ -145,7 +147,8 @@ class CustomEnv(gym.Env):
         self.score = 0
         self.running = True
         self.timer_start = None
-        # self.state = [0, 0]
+        self.state = [0, 0]
+        self.TIMER_STATE = 0
         return self._get_observation(), {}
 
     def _get_observation(self):
@@ -247,13 +250,6 @@ class CustomEnv(gym.Env):
             angle2_change = -5
         
 
-
-        # Update robot arm angles based on action
-        self.update(angle1_change, angle2_change)
-
-        # Handle events and check game over state
-        self.check_game_over()
-
         # Check if gripper passes over the target (apple)
         # Update robot arm angles based on action
         self.update(angle1_change, angle2_change)
@@ -274,8 +270,8 @@ class CustomEnv(gym.Env):
         elif self.distance_to_box < self.object_radius:
             if self.state == [1,0]:
                 if self.robot_arm.place(self.box_pos, self.object_radius):
-                    self.score += 100_000
                     print(f"Score after passing over box: {self.score}")
+                    self.score = 100_000
                     # self.state == [1,1]
                     self.state[0] = 1  # Indicating the apple has been picked
                     self.state[1] = 1  # Indicating the apple has been placed
@@ -284,7 +280,7 @@ class CustomEnv(gym.Env):
             #     self.score = -20
             else:
                 self.score = -20
-                
+
         # Robot state [0, 0]
         elif self.distance_to_apple <= 5 and self.state == [0, 0]:
             self.score = 30
@@ -295,23 +291,23 @@ class CustomEnv(gym.Env):
 
         
         elif self.distance_to_box <= 0 and self.state == [0, 0]:
-            self.score = -50
+            self.score = -500
         elif (self.distance_to_box > 5 and self.distance_to_box <= 10) and self.state == [0, 0]:
-            self.score = -40
+            self.score = -400
         elif (self.distance_to_box > 10 and self.distance_to_box <= 15) and self.state == [0, 0]:
-            self.score = -30
+            self.score = -300
         elif (self.distance_to_box < self.object_radius) and self.state == [0, 0]:
-            self.score = -100
+            self.score = -700
 
         # Robot state [1,0]
         elif (self.distance_to_apple < self.object_radius) and self.state == [1, 0]:
-            self.score = -100
+            self.score = -700
         elif self.distance_to_apple <= 5 and self.state == [1, 0]:
-            self.score = -50
+            self.score = -500
         elif (self.distance_to_apple > 5 and self.distance_to_apple <= 10) and self.state == [1, 0]:
-            self.score = -40
+            self.score = -400
         elif (self.distance_to_apple > 10 and self.distance_to_apple <= 15) and self.state == [1, 0]:
-            self.score = -30
+            self.score = -300
         
         elif self.distance_to_box <= 0 and self.state == [1, 0]:
             self.score = 30
@@ -320,9 +316,19 @@ class CustomEnv(gym.Env):
         elif (self.distance_to_box > 10 and self.distance_to_box <= 15) and self.state == [1, 0]:
             self.score = 10
 
-        else:
+        # elif self.state == [0, 0]:
+        #     self.score = (-1 * self.distance_to_apple)*10
+        #     self.score = (-1 * self.distance_to_box)
+
+        else :
             self.score = (-1 * self.distance_to_apple)
             self.score = (-1 * self.distance_to_box)
+    
+        # Update robot arm angles based on action
+        self.update(angle1_change, angle2_change)
+
+        # Handle events and check game over state
+        self.check_game_over()
         
 
         # Draw the environment
